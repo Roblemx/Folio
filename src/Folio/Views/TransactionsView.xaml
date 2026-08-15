@@ -1,0 +1,367 @@
+<UserControl x:Class="Folio.Views.TransactionsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Folio.ViewModels"
+             xmlns:controls="clr-namespace:Folio.Controls"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:TransactionsViewModel}">
+    <Grid>
+        <!-- Main content -->
+        <Grid Margin="36,28,36,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <DockPanel Grid.Row="0">
+                <Button DockPanel.Dock="Right" Content="+  Add transaction" Style="{StaticResource PrimaryButton}"
+                        Command="{Binding AddTransactionCommand}"
+                        Visibility="{Binding IsEditable, Converter={StaticResource BoolToVis}}" />
+                <Button DockPanel.Dock="Right" Content="Refresh" Style="{StaticResource GhostButton}"
+                        Margin="0,0,10,0" Command="{Binding RefreshCommand}" />
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Transactions" Style="{StaticResource Hero}" />
+                    <Border Background="{DynamicResource SurfaceAltBrush}" CornerRadius="6" Padding="8,3"
+                            VerticalAlignment="Center" Margin="14,6,0,0"
+                            Visibility="{Binding IsStale, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="offline · last known" Style="{StaticResource Caption}" FontSize="11" />
+                    </Border>
+                </StackPanel>
+            </DockPanel>
+
+            <!-- Toolbar: mode, cost basis, realized, import/export -->
+            <Border Grid.Row="1" Style="{StaticResource Card}" Padding="18,14" Margin="0,22,0,0">
+                <DockPanel>
+                    <!-- Import / Export (rightmost) -->
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Import CSV" Style="{StaticResource GhostButton}" Height="34"
+                                Command="{Binding ImportCsvCommand}"
+                                Visibility="{Binding IsEditable, Converter={StaticResource BoolToVis}}" />
+                        <Button Content="Export CSV" Style="{StaticResource GhostButton}" Height="34" Margin="8,0,0,0"
+                                Command="{Binding ExportCsvCommand}" />
+                        <Button Content="Export JSON" Style="{StaticResource GhostButton}" Height="34" Margin="8,0,0,0"
+                                Command="{Binding ExportJsonCommand}" />
+                    </StackPanel>
+
+                    <!-- Realized P&L (docked left of the I/O buttons so it never collides) -->
+                    <StackPanel DockPanel.Dock="Right" VerticalAlignment="Center" Margin="0,0,22,0"
+                                Visibility="{Binding HasRealized, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="Realized P&amp;L" Style="{StaticResource Caption}" FontSize="11.5" />
+                        <TextBlock Text="{Binding RealizedText}" FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{Binding RealizedUp, Converter={StaticResource UpBrush}}" />
+                    </StackPanel>
+
+                    <!-- Combined read-only note (All portfolios view) -->
+                    <StackPanel VerticalAlignment="Center"
+                                Visibility="{Binding IsEditable, Converter={StaticResource InverseBoolToVis}}">
+                        <TextBlock Text="Combined view" FontSize="13.5" FontWeight="Medium" />
+                        <TextBlock Text="All transactions across your portfolios (read-only)"
+                                   Style="{StaticResource Caption}" FontSize="11.5" />
+                    </StackPanel>
+
+                    <!-- Mode + cost basis (fills the remaining space) -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
+                                Visibility="{Binding IsEditable, Converter={StaticResource BoolToVis}}">
+                        <ToggleButton Style="{StaticResource Switch}" VerticalAlignment="Center"
+                                      IsChecked="{Binding IsTransactionMode}" />
+                        <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="Calculate portfolio from this ledger" FontSize="13.5" FontWeight="Medium" />
+                            <TextBlock Text="Reconstructs holdings &amp; cost basis from your transactions"
+                                       Style="{StaticResource Caption}" FontSize="11.5" />
+                        </StackPanel>
+
+                        <!-- Cost basis (only meaningful in transaction mode) -->
+                        <StackPanel Orientation="Horizontal" Margin="28,0,0,0" VerticalAlignment="Center"
+                                    Visibility="{Binding IsTransactionMode, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="Cost basis" Style="{StaticResource Caption}" VerticalAlignment="Center"
+                                       Margin="0,0,10,0" />
+                            <Border CornerRadius="8" Background="{DynamicResource SurfaceAltBrush}" Padding="3">
+                                <StackPanel Orientation="Horizontal">
+                                    <ToggleButton Content="Average" Style="{StaticResource RangeTab}"
+                                                  Command="{Binding SetCostBasisCommand}" CommandParameter="Average"
+                                                  IsChecked="{Binding CostBasisName, Converter={StaticResource EqualsBool}, ConverterParameter=Average, Mode=OneWay}" />
+                                    <ToggleButton Content="FIFO" Style="{StaticResource RangeTab}"
+                                                  Command="{Binding SetCostBasisCommand}" CommandParameter="Fifo"
+                                                  IsChecked="{Binding CostBasisName, Converter={StaticResource EqualsBool}, ConverterParameter=Fifo, Mode=OneWay}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <!-- Status line -->
+            <TextBlock Grid.Row="2" Text="{Binding StatusText}" Style="{StaticResource Caption}" Margin="2,10,0,0"
+                       Visibility="{Binding StatusText, Converter={StaticResource BoolToVis}}" />
+
+            <!-- Column header -->
+            <Grid Grid.Row="3" Margin="14,18,8,0"
+                  Visibility="{Binding HasTransactions, Converter={StaticResource BoolToVis}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="112" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="120" />
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="110" />
+                    <ColumnDefinition Width="120" />
+                    <ColumnDefinition Width="84" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Type" Style="{StaticResource Caption}" />
+                <TextBlock Grid.Column="1" Text="Asset" Style="{StaticResource Caption}" />
+                <TextBlock Grid.Column="2" Text="Date" Style="{StaticResource Caption}" />
+                <TextBlock Grid.Column="3" Text="Amount" Style="{StaticResource Caption}" HorizontalAlignment="Right" />
+                <TextBlock Grid.Column="4" Text="Price" Style="{StaticResource Caption}" HorizontalAlignment="Right" />
+                <TextBlock Grid.Column="5" Text="Value" Style="{StaticResource Caption}" HorizontalAlignment="Right" />
+            </Grid>
+
+            <!-- Rows -->
+            <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto" Margin="0,6,0,0"
+                          Visibility="{Binding HasTransactions, Converter={StaticResource BoolToVis}}">
+                <ItemsControl ItemsSource="{Binding Rows}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border x:Name="rb" Background="Transparent" CornerRadius="10" Padding="14,11" Margin="0,2">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="112" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="120" />
+                                        <ColumnDefinition Width="150" />
+                                        <ColumnDefinition Width="110" />
+                                        <ColumnDefinition Width="120" />
+                                        <ColumnDefinition Width="84" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Type chip -->
+                                    <Border Grid.Column="0" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="6"
+                                            Padding="9,4" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding TypeLabel}" FontSize="11.5" FontWeight="Medium"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                                    </Border>
+
+                                    <!-- Asset -->
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <controls:CoinIcon Diameter="30" CoinId="{Binding CoinId}"
+                                                           ImageUrl="{Binding ImageUrl}" Initial="{Binding Initial}"
+                                                           Accent="{Binding Accent}" />
+                                        <StackPanel Margin="11,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding CoinName}" FontWeight="Medium" FontSize="13.5" />
+                                            <TextBlock Text="{Binding NoteText}" Style="{StaticResource Caption}" FontSize="11"
+                                                       TextTrimming="CharacterEllipsis" MaxWidth="220" HorizontalAlignment="Left"
+                                                       Visibility="{Binding NoteText, Converter={StaticResource BoolToVis}}" />
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <TextBlock Grid.Column="2" Text="{Binding DateText}" VerticalAlignment="Center"
+                                               FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                    <TextBlock Grid.Column="3" Text="{Binding AmountText}" VerticalAlignment="Center"
+                                               HorizontalAlignment="Right" FontSize="13.5"
+                                               Foreground="{Binding IsInflow, Converter={StaticResource UpBrush}}" />
+                                    <TextBlock Grid.Column="4" Text="{Binding PriceText}" VerticalAlignment="Center"
+                                               HorizontalAlignment="Right" FontSize="13.5"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                                    <TextBlock Grid.Column="5" Text="{Binding ValueText}" VerticalAlignment="Center"
+                                               HorizontalAlignment="Right" FontSize="14" FontWeight="Medium" />
+
+                                    <!-- Actions -->
+                                    <StackPanel Grid.Column="6" x:Name="actions" Orientation="Horizontal"
+                                                HorizontalAlignment="Right" VerticalAlignment="Center" Opacity="0"
+                                                Visibility="{Binding DataContext.IsEditable,
+                                                             RelativeSource={RelativeSource AncestorType=ItemsControl},
+                                                             Converter={StaticResource BoolToVis}}">
+                                        <Button Width="30" Height="30" Cursor="Hand" ToolTip="Edit"
+                                                Command="{Binding DataContext.EditRowCommand,
+                                                          RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="eb" Background="Transparent" CornerRadius="7">
+                                                        <TextBlock Text="✎" FontSize="14" HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center"
+                                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="eb" Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                        <Button Width="30" Height="30" Cursor="Hand" ToolTip="Delete" Margin="4,0,0,0"
+                                                Command="{Binding DataContext.DeleteRowCommand,
+                                                          RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="db" Background="Transparent" CornerRadius="7">
+                                                        <TextBlock x:Name="dx" Text="✕" FontSize="13" HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center"
+                                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="db" Property="Background" Value="{DynamicResource NegativeBrush}" />
+                                                            <Setter TargetName="dx" Property="Foreground" Value="White" />
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                            <DataTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" SourceName="rb" Value="True">
+                                    <Setter TargetName="rb" Property="Background" Value="{DynamicResource SurfaceBrush}" />
+                                    <Setter TargetName="actions" Property="Opacity" Value="1" />
+                                </Trigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!-- Empty state -->
+            <StackPanel Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Center"
+                        Visibility="{Binding HasTransactions, Converter={StaticResource InverseBoolToVis}}">
+                <TextBlock Text="No transactions yet" Style="{StaticResource Heading}" HorizontalAlignment="Center" />
+                <TextBlock Text="Record buys, sells, transfers and swaps to track realized &amp; unrealized P&amp;L."
+                           Style="{StaticResource Caption}" HorizontalAlignment="Center" Margin="0,8,0,0" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0"
+                            Visibility="{Binding IsEditable, Converter={StaticResource BoolToVis}}">
+                    <Button Content="+  Add transaction" Style="{StaticResource PrimaryButton}"
+                            Command="{Binding AddTransactionCommand}" />
+                    <Button Content="Import CSV" Style="{StaticResource GhostButton}" Margin="10,0,0,0"
+                            Command="{Binding ImportCsvCommand}" />
+                </StackPanel>
+                <TextBlock Text="🔒 Everything stays on your machine." Style="{StaticResource Caption}"
+                           FontSize="11" HorizontalAlignment="Center" Margin="0,16,0,0" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Add/Edit editor overlay -->
+        <Grid Background="#99000000" Visibility="{Binding IsEditorOpen, Converter={StaticResource BoolToVis}}">
+            <Border Style="{StaticResource Card}" Width="480" VerticalAlignment="Center" HorizontalAlignment="Center"
+                    Padding="26">
+                <StackPanel>
+                    <TextBlock Text="{Binding EditorTitle}" Style="{StaticResource Heading}" />
+
+                    <!-- Type chips -->
+                    <TextBlock Text="Type" Style="{StaticResource Caption}" Margin="0,16,0,8" />
+                    <ItemsControl ItemsSource="{Binding TypeOptions}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <ToggleButton Content="{Binding Label}" Style="{StaticResource ChipToggle}"
+                                              IsChecked="{Binding IsSelected, Mode=OneWay}"
+                                              Command="{Binding DataContext.SetTypeCommand,
+                                                        RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                              CommandParameter="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Coin search -->
+                    <TextBlock Text="Asset" Style="{StaticResource Caption}" Margin="0,6,0,6" />
+                    <TextBox Style="{StaticResource TextInput}"
+                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                             Tag="Search a coin (e.g. bitcoin, eth)…" />
+                    <Border Background="{DynamicResource SurfaceAltBrush}" CornerRadius="9" Margin="0,8,0,0"
+                            MaxHeight="170"
+                            Visibility="{Binding SearchResults.Count, Converter={StaticResource BoolToVis}}">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding SearchResults}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.PickCoinCommand,
+                                                          RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}" Cursor="Hand" HorizontalContentAlignment="Left">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="b" Background="Transparent" Padding="12,8">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="{Binding Name}" FontSize="13.5" />
+                                                            <TextBlock Text="{Binding Symbol}" Style="{StaticResource Caption}"
+                                                                       FontSize="11.5" Margin="8,1,0,0" />
+                                                        </StackPanel>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="b" Property="Background" Value="{DynamicResource SurfaceBrush}" />
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                    <TextBlock Text="{Binding SelectedCoinLabel}" FontWeight="Medium" Margin="0,10,0,0"
+                               Visibility="{Binding SelectedCoinLabel, Converter={StaticResource BoolToVis}}" />
+
+                    <!-- Amount / Price -->
+                    <Grid Margin="0,14,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="14" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Amount" Style="{StaticResource Caption}" Margin="0,0,0,6" />
+                            <TextBox Style="{StaticResource TextInput}"
+                                     Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Price per coin" Style="{StaticResource Caption}" Margin="0,0,0,6" />
+                            <TextBox Style="{StaticResource TextInput}"
+                                     Text="{Binding PriceText, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Fee / Date -->
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="14" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Fee (optional)" Style="{StaticResource Caption}" Margin="0,0,0,6" />
+                            <TextBox Style="{StaticResource TextInput}"
+                                     Text="{Binding FeeText, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Date (YYYY-MM-DD)" Style="{StaticResource Caption}" Margin="0,0,0,6" />
+                            <TextBox Style="{StaticResource TextInput}"
+                                     Text="{Binding DateText, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Text="Note (optional)" Style="{StaticResource Caption}" Margin="0,12,0,6" />
+                    <TextBox Style="{StaticResource TextInput}"
+                             Text="{Binding NoteText, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,22,0,0">
+                        <Button Content="Cancel" Style="{StaticResource GhostButton}" Margin="0,0,10,0"
+                                Command="{Binding CancelEditorCommand}" />
+                        <Button Content="Save" Style="{StaticResource PrimaryButton}" Width="110"
+                                Command="{Binding ConfirmCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,270 @@
+<UserControl x:Class="Folio.Views.MarketsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Folio.ViewModels"
+             xmlns:controls="clr-namespace:Folio.Controls"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:MarketsViewModel}">
+    <Grid Margin="36,28,36,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Header + search -->
+        <DockPanel Grid.Row="0">
+            <Button DockPanel.Dock="Right" Content="Refresh" Style="{StaticResource GhostButton}"
+                    Command="{Binding RefreshCommand}" />
+            <Grid DockPanel.Dock="Right" Width="280" Margin="0,0,12,0" VerticalAlignment="Center">
+                <TextBox x:Name="MarketSearch" Style="{StaticResource TextInput}"
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         Tag="Search any coin…" />
+                <Popup IsOpen="{Binding HasSearchResults, Mode=OneWay}" PlacementTarget="{Binding ElementName=MarketSearch}"
+                       Placement="Bottom" StaysOpen="True" AllowsTransparency="True" Width="280">
+                    <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="9" Margin="0,4,0,0" MaxHeight="280" Padding="4">
+                        <Border.Effect>
+                            <DropShadowEffect Color="#000000" BlurRadius="16" ShadowDepth="2" Opacity="0.4" />
+                        </Border.Effect>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding SearchResults}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.PickCoinCommand,
+                                                          RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}" Cursor="Hand" HorizontalContentAlignment="Left">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="b" Background="Transparent" Padding="12,8" CornerRadius="6">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="{Binding Name}" FontSize="13.5" />
+                                                            <TextBlock Text="{Binding Symbol}" Style="{StaticResource Caption}"
+                                                                       FontSize="11.5" Margin="8,1,0,0" />
+                                                        </StackPanel>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="b" Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                </Popup>
+            </Grid>
+            <TextBlock Text="Markets" Style="{StaticResource Hero}" />
+        </DockPanel>
+
+        <!-- Fear & Greed + movers -->
+        <Grid Grid.Row="1" Margin="0,22,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Fear & Greed -->
+            <Border Grid.Column="0" Style="{StaticResource Card}" Margin="0,0,8,0">
+                <StackPanel>
+                    <TextBlock Text="Fear &amp; Greed" Style="{StaticResource Caption}" />
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding FngValueText}" FontSize="40" FontWeight="Bold"
+                                   Foreground="{Binding FngColor}" />
+                        <TextBlock Text="{Binding FngLabel}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Bottom"
+                                   Margin="12,0,0,10" Foreground="{Binding FngColor}" />
+                    </StackPanel>
+                    <Grid Height="16" Margin="0,10,0,2">
+                        <Border Height="10" CornerRadius="5" VerticalAlignment="Center">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                    <GradientStop Color="#F0616D" Offset="0" />
+                                    <GradientStop Color="#F2A33D" Offset="0.35" />
+                                    <GradientStop Color="#E8C341" Offset="0.5" />
+                                    <GradientStop Color="#7FC97F" Offset="0.72" />
+                                    <GradientStop Color="#2FBF71" Offset="1" />
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="{Binding FngPosition, Converter={StaticResource RatioStar}}" />
+                                <ColumnDefinition Width="{Binding FngPosition, Converter={StaticResource RatioStar}, ConverterParameter=inv}" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Width="3" Height="16" CornerRadius="1.5" Background="White"
+                                    HorizontalAlignment="Right" VerticalAlignment="Center" />
+                        </Grid>
+                    </Grid>
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Extreme fear" Style="{StaticResource Caption}" FontSize="10.5" />
+                        <TextBlock Text="Extreme greed" Style="{StaticResource Caption}" FontSize="10.5"
+                                   HorizontalAlignment="Right" />
+                    </DockPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Top gainers -->
+            <Border Grid.Column="1" Style="{StaticResource Card}" Margin="8,0,8,0">
+                <StackPanel>
+                    <TextBlock Text="Top gainers (24h)" Style="{StaticResource Caption}" />
+                    <ItemsControl ItemsSource="{Binding Gainers}" Margin="0,8,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Command="{Binding DataContext.OpenCommand,
+                                                  RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding CoinId}" Cursor="Hand" HorizontalContentAlignment="Stretch">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Grid Background="Transparent" Margin="0,5">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <controls:CoinIcon Grid.Column="0" Diameter="24" CoinId="{Binding CoinId}"
+                                                                   ImageUrl="{Binding ImageUrl}" Initial="{Binding Initial}"
+                                                                   Accent="{Binding Accent}" />
+                                                <TextBlock Grid.Column="1" Text="{Binding Symbol}" VerticalAlignment="Center"
+                                                           Margin="9,0,0,0" FontSize="13" />
+                                                <TextBlock Grid.Column="2" Text="{Binding ChangeText}" VerticalAlignment="Center" FontSize="13"
+                                                           Foreground="{Binding IsUp, Converter={StaticResource UpBrush}}" />
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Top losers -->
+            <Border Grid.Column="2" Style="{StaticResource Card}" Margin="8,0,0,0">
+                <StackPanel>
+                    <TextBlock Text="Top losers (24h)" Style="{StaticResource Caption}" />
+                    <ItemsControl ItemsSource="{Binding Losers}" Margin="0,8,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Command="{Binding DataContext.OpenCommand,
+                                                  RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding CoinId}" Cursor="Hand" HorizontalContentAlignment="Stretch">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Grid Background="Transparent" Margin="0,5">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <controls:CoinIcon Grid.Column="0" Diameter="24" CoinId="{Binding CoinId}"
+                                                                   ImageUrl="{Binding ImageUrl}" Initial="{Binding Initial}"
+                                                                   Accent="{Binding Accent}" />
+                                                <TextBlock Grid.Column="1" Text="{Binding Symbol}" VerticalAlignment="Center"
+                                                           Margin="9,0,0,0" FontSize="13" />
+                                                <TextBlock Grid.Column="2" Text="{Binding ChangeText}" VerticalAlignment="Center" FontSize="13"
+                                                           Foreground="{Binding IsUp, Converter={StaticResource UpBrush}}" />
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Column header -->
+        <Grid Grid.Row="2" Margin="14,22,8,0"
+              Visibility="{Binding HasData, Converter={StaticResource BoolToVis}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="40" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="130" />
+                <ColumnDefinition Width="90" />
+                <ColumnDefinition Width="150" />
+                <ColumnDefinition Width="120" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="#" Style="{StaticResource Caption}" />
+            <TextBlock Grid.Column="1" Text="Coin" Style="{StaticResource Caption}" />
+            <TextBlock Grid.Column="2" Text="Price" Style="{StaticResource Caption}" HorizontalAlignment="Right" />
+            <TextBlock Grid.Column="3" Text="24h" Style="{StaticResource Caption}" HorizontalAlignment="Right" />
+            <TextBlock Grid.Column="4" Text="Market cap" Style="{StaticResource Caption}" HorizontalAlignment="Right" />
+            <TextBlock Grid.Column="5" Text="7d" Style="{StaticResource Caption}" HorizontalAlignment="Right" />
+        </Grid>
+
+        <!-- Top coins -->
+        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Margin="0,6,0,0">
+            <ItemsControl ItemsSource="{Binding TopCoins}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Command="{Binding DataContext.OpenCommand,
+                                          RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                CommandParameter="{Binding CoinId}" Cursor="Hand" HorizontalContentAlignment="Stretch">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="b" Background="Transparent" CornerRadius="10" Padding="14,10" Margin="0,2">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="130" />
+                                                <ColumnDefinition Width="90" />
+                                                <ColumnDefinition Width="150" />
+                                                <ColumnDefinition Width="120" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock Grid.Column="0" Text="{Binding RankText}" VerticalAlignment="Center"
+                                                       FontSize="12.5" Foreground="{DynamicResource TextFaintBrush}" />
+
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <controls:CoinIcon Diameter="30" CoinId="{Binding CoinId}"
+                                                                   ImageUrl="{Binding ImageUrl}" Initial="{Binding Initial}"
+                                                                   Accent="{Binding Accent}" />
+                                                <StackPanel Margin="11,0,0,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Name}" FontWeight="Medium" FontSize="13.5" />
+                                                    <TextBlock Text="{Binding Symbol}" Style="{StaticResource Caption}" FontSize="11.5" />
+                                                </StackPanel>
+                                            </StackPanel>
+
+                                            <TextBlock Grid.Column="2" Text="{Binding PriceText}" VerticalAlignment="Center"
+                                                       HorizontalAlignment="Right" FontSize="13.5" />
+                                            <TextBlock Grid.Column="3" Text="{Binding ChangeText}" VerticalAlignment="Center"
+                                                       HorizontalAlignment="Right" FontSize="13.5"
+                                                       Foreground="{Binding IsUp, Converter={StaticResource UpBrush}}" />
+                                            <TextBlock Grid.Column="4" Text="{Binding MarketCapText}" VerticalAlignment="Center"
+                                                       HorizontalAlignment="Right" FontSize="13.5"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                                            <controls:Sparkline Grid.Column="5" Width="100" Height="34" HorizontalAlignment="Right"
+                                                                VerticalAlignment="Center" Values="{Binding Spark}"
+                                                                Stroke="{Binding IsUp, Converter={StaticResource UpBrush}}" />
+                                        </Grid>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="b" Property="Background" Value="{DynamicResource SurfaceBrush}" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- Loading state -->
+        <StackPanel Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Center"
+                    Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
+            <TextBlock Text="Loading markets…" Style="{StaticResource Caption}" HorizontalAlignment="Center" />
+        </StackPanel>
+    </Grid>
+</UserControl>

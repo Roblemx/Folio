@@ -1,0 +1,190 @@
+<UserControl x:Class="Folio.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Folio.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:SettingsViewModel}">
+    <Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="36,28,36,40" MaxWidth="760" HorizontalAlignment="Left">
+            <TextBlock Text="Settings" Style="{StaticResource Hero}" />
+
+            <!-- Appearance -->
+            <Border Style="{StaticResource Card}" Margin="0,22,0,0">
+                <StackPanel>
+                    <TextBlock Text="Appearance" Style="{StaticResource Heading}" FontSize="15" />
+                    <TextBlock Text="Theme" Style="{StaticResource Caption}" Margin="0,12,0,8" />
+                    <StackPanel Orientation="Horizontal">
+                        <ToggleButton Content="Dark" Style="{StaticResource ChipToggle}"
+                                      Command="{Binding SetThemeCommand}" CommandParameter="Dark"
+                                      IsChecked="{Binding SelectedTheme, Converter={StaticResource EqualsBool}, ConverterParameter=Dark, Mode=OneWay}" />
+                        <ToggleButton Content="Light" Style="{StaticResource ChipToggle}"
+                                      Command="{Binding SetThemeCommand}" CommandParameter="Light"
+                                      IsChecked="{Binding SelectedTheme, Converter={StaticResource EqualsBool}, ConverterParameter=Light, Mode=OneWay}" />
+                        <ToggleButton Content="System" Style="{StaticResource ChipToggle}"
+                                      Command="{Binding SetThemeCommand}" CommandParameter="System"
+                                      IsChecked="{Binding SelectedTheme, Converter={StaticResource EqualsBool}, ConverterParameter=System, Mode=OneWay}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Currency -->
+            <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Display currency" Style="{StaticResource Heading}" FontSize="15" />
+                    <TextBlock Text="All values are stored in USD and converted live for display." Style="{StaticResource Caption}"
+                               Margin="0,4,0,10" />
+                    <StackPanel Orientation="Horizontal">
+                        <ToggleButton Content="USD $" Style="{StaticResource ChipToggle}"
+                                      Command="{Binding SetCurrencyCommand}" CommandParameter="USD"
+                                      IsChecked="{Binding SelectedCurrency, Converter={StaticResource EqualsBool}, ConverterParameter=USD, Mode=OneWay}" />
+                        <ToggleButton Content="EUR €" Style="{StaticResource ChipToggle}"
+                                      Command="{Binding SetCurrencyCommand}" CommandParameter="EUR"
+                                      IsChecked="{Binding SelectedCurrency, Converter={StaticResource EqualsBool}, ConverterParameter=EUR, Mode=OneWay}" />
+                        <ToggleButton Content="GBP £" Style="{StaticResource ChipToggle}"
+                                      Command="{Binding SetCurrencyCommand}" CommandParameter="GBP"
+                                      IsChecked="{Binding SelectedCurrency, Converter={StaticResource EqualsBool}, ConverterParameter=GBP, Mode=OneWay}" />
+                        <ToggleButton Content="JPY ¥" Style="{StaticResource ChipToggle}"
+                                      Command="{Binding SetCurrencyCommand}" CommandParameter="JPY"
+                                      IsChecked="{Binding SelectedCurrency, Converter={StaticResource EqualsBool}, ConverterParameter=JPY, Mode=OneWay}" />
+                        <ToggleButton Content="TRY ₺" Style="{StaticResource ChipToggle}"
+                                      Command="{Binding SetCurrencyCommand}" CommandParameter="TRY"
+                                      IsChecked="{Binding SelectedCurrency, Converter={StaticResource EqualsBool}, ConverterParameter=TRY, Mode=OneWay}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Auto-refresh -->
+            <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Auto-refresh prices" Style="{StaticResource Heading}" FontSize="15" />
+                    <TextBlock Text="How often Folio fetches fresh prices in the background." Style="{StaticResource Caption}"
+                               Margin="0,4,0,10" />
+                    <StackPanel Orientation="Horizontal">
+                        <ToggleButton Content="Off" Style="{StaticResource ChipToggle}"
+                                      Command="{Binding SetRefreshCommand}" CommandParameter="0"
+                                      IsChecked="{Binding RefreshSecondsText, Converter={StaticResource EqualsBool}, ConverterParameter=0, Mode=OneWay}" />
+                        <ToggleButton Content="30 sec" Style="{StaticResource ChipToggle}"
+                                      Command="{Binding SetRefreshCommand}" CommandParameter="30"
+                                      IsChecked="{Binding RefreshSecondsText, Converter={StaticResource EqualsBool}, ConverterParameter=30, Mode=OneWay}" />
+                        <ToggleButton Content="90 sec" Style="{StaticResource ChipToggle}"
+                                      Command="{Binding SetRefreshCommand}" CommandParameter="90"
+                                      IsChecked="{Binding RefreshSecondsText, Converter={StaticResource EqualsBool}, ConverterParameter=90, Mode=OneWay}" />
+                        <ToggleButton Content="5 min" Style="{StaticResource ChipToggle}"
+                                      Command="{Binding SetRefreshCommand}" CommandParameter="300"
+                                      IsChecked="{Binding RefreshSecondsText, Converter={StaticResource EqualsBool}, ConverterParameter=300, Mode=OneWay}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Security -->
+            <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Security" Style="{StaticResource Heading}" FontSize="15" />
+
+                    <!-- Encrypted state -->
+                    <Grid Margin="0,12,0,0" Visibility="{Binding IsEncrypted, Converter={StaticResource BoolToVis}}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button Content="Change password" Style="{StaticResource GhostButton}" Height="34"
+                                        Command="{Binding BeginChangePasswordCommand}" />
+                                <Button Content="Remove" Style="{StaticResource GhostButton}" Height="34" Margin="8,0,0,0"
+                                        Command="{Binding BeginRemoveEncryptionCommand}" />
+                            </StackPanel>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="🔒 Data file is encrypted" FontSize="13.5" FontWeight="Medium" />
+                                <TextBlock Text="AES-256-GCM with a key derived from your password. Asked for on startup."
+                                           Style="{StaticResource Caption}" FontSize="11.5" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Grid>
+
+                    <!-- Plaintext state -->
+                    <Grid Margin="0,12,0,0" Visibility="{Binding IsEncrypted, Converter={StaticResource InverseBoolToVis}}">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Content="Encrypt data" Style="{StaticResource PrimaryButton}"
+                                    Height="34" VerticalAlignment="Center" Command="{Binding BeginEnableEncryptionCommand}" />
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Data file is not encrypted" FontSize="13.5" FontWeight="Medium" />
+                                <TextBlock Text="Add a password to encrypt your portfolio at rest on this PC."
+                                           Style="{StaticResource Caption}" FontSize="11.5" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Privacy & data -->
+            <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Privacy &amp; data" Style="{StaticResource Heading}" FontSize="15" />
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <TextBlock Text="🔒" FontSize="13" Margin="0,0,8,0" />
+                        <TextBlock Text="Local &amp; private — no account, no cloud, no keys. Your data never leaves this PC."
+                                   Style="{StaticResource Caption}" />
+                    </StackPanel>
+
+                    <TextBlock Text="Data folder" Style="{StaticResource Caption}" Margin="0,14,0,4" FontWeight="SemiBold" />
+                    <Border Background="{DynamicResource SurfaceAltBrush}" CornerRadius="7" Padding="11,8">
+                        <TextBlock Text="{Binding DataLocation}" FontFamily="Consolas" FontSize="12"
+                                   TextTrimming="CharacterEllipsis" />
+                    </Border>
+
+                    <TextBlock Text="Network requests Folio makes" Style="{StaticResource Caption}" Margin="0,14,0,6"
+                               FontWeight="SemiBold" />
+                    <ItemsControl ItemsSource="{Binding NetworkHosts}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="0,3">
+                                    <Border Width="5" Height="5" CornerRadius="2.5" Background="{DynamicResource AccentBrush}"
+                                            VerticalAlignment="Center" Margin="0,0,9,0" />
+                                    <TextBlock Text="{Binding}" Style="{StaticResource Caption}" FontSize="12" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,14,0,12" />
+                    <TextBlock Text="Folio · local crypto portfolio tracker" FontWeight="Medium" FontSize="13" />
+                    <TextBlock Text="For tracking and education only — not financial advice."
+                               Style="{StaticResource Caption}" FontSize="11.5" Margin="0,3,0,0" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+
+    <!-- Security editor overlay -->
+    <Grid Background="#99000000" Visibility="{Binding IsSecurityEditorOpen, Converter={StaticResource BoolToVis}}">
+        <Border Style="{StaticResource Card}" Width="420" VerticalAlignment="Center" HorizontalAlignment="Center"
+                Padding="26">
+            <StackPanel>
+                <TextBlock Text="{Binding SecurityTitle}" Style="{StaticResource Heading}" />
+
+                <StackPanel Visibility="{Binding SecurityNeedsPassword, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="Password" Style="{StaticResource Caption}" Margin="0,16,0,6" />
+                    <PasswordBox x:Name="Pw1" Style="{StaticResource PasswordInput}" />
+                    <TextBlock Text="Confirm password" Style="{StaticResource Caption}" Margin="0,12,0,6" />
+                    <PasswordBox x:Name="Pw2" Style="{StaticResource PasswordInput}" />
+                </StackPanel>
+
+                <TextBlock Visibility="{Binding SecurityNeedsPassword, Converter={StaticResource InverseBoolToVis}}"
+                           Text="This saves your portfolio as plain JSON again. Continue?"
+                           Style="{StaticResource Caption}" Margin="0,14,0,0" TextWrapping="Wrap" />
+
+                <TextBlock Text="{Binding SecurityError}" Foreground="{DynamicResource NegativeBrush}" FontSize="12.5"
+                           Margin="2,10,0,0"
+                           Visibility="{Binding SecurityError, Converter={StaticResource BoolToVis}}" />
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                    <Button Content="Cancel" Style="{StaticResource GhostButton}" Margin="0,0,10,0"
+                            Command="{Binding CancelSecurityCommand}" />
+                    <Button Content="Confirm" Style="{StaticResource PrimaryButton}" Width="110"
+                            Click="OnConfirmSecurity" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,54 @@
+<Application x:Class="Folio.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Folio.ViewModels"
+             xmlns:conv="clr-namespace:Folio.Converters"
+             xmlns:views="clr-namespace:Folio.Views">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/Colors.Dark.xaml" />
+                <ResourceDictionary Source="Themes/Controls.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Converters -->
+            <conv:UpBrushConverter x:Key="UpBrush" />
+            <conv:BoolToVisConverter x:Key="BoolToVis" />
+            <conv:InverseBoolToVisConverter x:Key="InverseBoolToVis" />
+            <conv:EqualsBoolConverter x:Key="EqualsBool" />
+            <conv:RatioToStarConverter x:Key="RatioStar" />
+
+            <!-- ViewModel → View mapping -->
+            <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
+                <views:DashboardView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:HoldingsViewModel}">
+                <views:HoldingsView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:TransactionsViewModel}">
+                <views:TransactionsView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:MarketsViewModel}">
+                <views:MarketsView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:AlertsViewModel}">
+                <views:AlertsView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:WatchViewModel}">
+                <views:WatchView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:DcaViewModel}">
+                <views:DcaView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:RebalanceViewModel}">
+                <views:RebalanceView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:CoinDetailViewModel}">
+                <views:CoinDetailView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+                <views:SettingsView />
+            </DataTemplate>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
